@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+:root {
+  --color-background: #0b0f0d;
+  --color-surface: #151a17;
+  --color-surface-raised: #1c231f;
+  --color-primary: #3f4a3b;
+  --color-accent: #c9a227;
+  --color-team-a: #2f6fb5;
+  --color-team-b: #b5432f;
+  --color-text: #edebe3;
+  --color-text-muted: #9aa095;
+  --color-danger: #e5484d;
+  --color-border: #2a322a;
+}
+
+@theme inline {
+  --color-background: var(--color-background);
+  --color-surface: var(--color-surface);
+  --color-surface-raised: var(--color-surface-raised);
+  --color-primary: var(--color-primary);
+  --color-accent: var(--color-accent);
+  --color-team-a: var(--color-team-a);
+  --color-team-b: var(--color-team-b);
+  --color-text: var(--color-text);
+  --color-text-muted: var(--color-text-muted);
+  --color-danger: var(--color-danger);
+  --color-border: var(--color-border);
+  --font-heading: var(--font-russo-one);
+  --font-body: var(--font-chakra-petch);
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

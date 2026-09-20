@@ -1,0 +1,30 @@
+import { PieceType, RANKED_OFFICERS } from "./types";
+
+/** Higher number wins in combat. Only the 9 officer ranks participate in this ladder. */
+const RANK_VALUE: Partial<Record<PieceType, number>> = {};
+RANKED_OFFICERS.forEach((type, index) => {
+  RANK_VALUE[type] = RANKED_OFFICERS.length - index; // Field Marshal = 9, ..., Engineer = 1
+});
+
+export function rankOf(type: PieceType): number | undefined {
+  return RANK_VALUE[type];
+}
+
+export function isRankedOfficer(type: PieceType): boolean {
+  return RANK_VALUE[type] !== undefined;
+}
+
+export const PIECE_LABELS: Record<PieceType, string> = {
+  FIELD_MARSHAL: "FM",
+  GENERAL: "GEN",
+  MAJOR_GENERAL: "MG",
+  BRIGADIER_GENERAL: "BG",
+  COLONEL: "COL",
+  MAJOR: "MAJ",
+  CAPTAIN: "CPT",
+  LIEUTENANT: "LT",
+  ENGINEER: "ENG",
+  LANDMINE: "MINE",
+  BOMB: "BOMB",
+  FLAG: "FLAG",
+};
