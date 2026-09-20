@@ -95,7 +95,7 @@ describe("applyMove - headquarters immobilization", () => {
 });
 
 describe("applyMove - combat and the Field Marshal reveal rule", () => {
-  it("reveals both pieces' types when they clash", () => {
+  it("does not reveal either piece's type just from clashing (house rule: no combat reveal)", () => {
     const state = baseState2p([
       piece({ id: "a", type: "GENERAL", seatIndex: 0, nodeId: "P0-2-0" }),
       piece({ id: "b", type: "CAPTAIN", seatIndex: 1, nodeId: "P0-2-1" }),
@@ -103,8 +103,8 @@ describe("applyMove - combat and the Field Marshal reveal rule", () => {
     const result = applyMove(BOARD_2P, state, 0, "P0-2-0", "P0-2-1");
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.nextState.pieces.find((p) => p.id === "a")!.revealed).toBe(true);
-    expect(result.nextState.pieces.find((p) => p.id === "b")!.revealed).toBe(true);
+    expect(result.nextState.pieces.find((p) => p.id === "a")!.revealed).toBe(false);
+    expect(result.nextState.pieces.find((p) => p.id === "b")!.revealed).toBe(false);
     expect(result.move.result).toBe("attacker_wins");
   });
 

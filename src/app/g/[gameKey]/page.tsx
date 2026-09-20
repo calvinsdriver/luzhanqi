@@ -116,15 +116,15 @@ export default function GamePage({ params }: PageProps<"/g/[gameKey]">) {
   }
 
   return (
-    <div className="flex-1 px-4 py-8">
+    <div className="flex h-dvh flex-col overflow-hidden px-4 py-3">
       {state.status === "finished" && (
-        <div className="mx-auto mb-6 max-w-3xl">
+        <div className="mx-auto mb-3 w-full max-w-3xl flex-shrink-0">
           <GameOverBanner state={state} />
         </div>
       )}
 
-      <div className="mx-auto flex max-w-5xl flex-col gap-4 lg:flex-row">
-        <div className="flex-1">
+      <div className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col gap-4 lg:flex-row">
+        <div className="flex min-h-0 min-w-0 flex-1 items-center justify-center">
           <BoardCanvas
             board={board}
             pieces={state.pieces}
@@ -136,7 +136,7 @@ export default function GamePage({ params }: PageProps<"/g/[gameKey]">) {
           />
         </div>
 
-        <div className="flex w-full flex-col gap-4 lg:w-64">
+        <div className="flex w-full flex-shrink-0 flex-col gap-4 overflow-y-auto lg:w-64 lg:max-h-full">
           <TurnIndicator state={state} seatIndex={seatIndex} />
           {moveError && (
             <p role="alert" className="text-xs text-danger">

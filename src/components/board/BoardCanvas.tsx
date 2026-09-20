@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import type { BoardGraph, NodeId, PublicPiece } from "@/lib/rules/types";
+import { rotatePoint, viewerRotationDegrees } from "@/lib/client/boardOrientation";
 import { PieceToken } from "./PieceToken";
 
 const CELL = 40;
@@ -26,18 +27,29 @@ export function BoardCanvas({
 }) {
   const nodes = Object.values(board.nodes);
 
+  // Board data is authored in a fixed absolute layout (seat 0 always "north", etc.) - rotate
+  // it per viewer here, purely for rendering, so your own seat always ends up at the bottom.
+  const rotationDeg = viewerRotationDegrees(board.mode, seatIndex);
+  const rotated = useMemo(() => {
+    const map = new Map<NodeId, { x: number; y: number }>();
+    for (const node of nodes) map.set(node.id, rotatePoint(node.x, node.y, rotationDeg));
+    return map;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [board, rotationDeg]);
+
   const { minX, minY, width, height } = useMemo(() => {
-    const xs = nodes.map((n) => n.x);
-    const ys = nodes.map((n) => n.y);
+    const points = [...rotated.values()];
+    const xs = points.map((p) => p.x);
+    const ys = points.map((p) => p.y);
     const minX = Math.min(...xs) - PADDING;
     const minY = Math.min(...ys) - PADDING;
     const maxX = Math.max(...xs) + PADDING;
     const maxY = Math.max(...ys) + PADDING;
     return { minX, minY, width: (maxX - minX) * CELL, height: (maxY - minY) * CELL };
-  }, [nodes]);
+  }, [rotated]);
 
-  const px = (x: number) => (x - minX) * CELL;
-  const py = (y: number) => (y - minY) * CELL;
+  const px = (nodeId: NodeId) => (rotated.get(nodeId)!.x - minX) * CELL;
+  const py = (nodeId: NodeId) => (rotated.get(nodeId)!.y - minY) * CELL;
 
   const pieceByNode = useMemo(() => {
     const map = new Map<NodeId, PublicPiece>();
@@ -77,30 +89,28 @@ export function BoardCanvas({
   return (
     <svg
       viewBox={`0 0 ${width} ${height}`}
-      className="h-auto w-full max-w-[720px]"
+      className="max-h-full max-w-full"
+      style={{ width: "auto", height: "auto", aspectRatio: `${width} / ${height}` }}
+      preserveAspectRatio="xMidYMid meet"
       role="img"
       aria-label="Luzhanqi board"
     >
-      {roadLines.map(([from, to]) => {
-        const a = board.nodes[from];
-        const b = board.nodes[to];
-        return (
-          <line
-            key={`road-${from}-${to}`}
-            x1={px(a.x)}
-            y1={py(a.y)}
-            x2={px(b.x)}
-            y2={py(b.y)}
-            stroke="var(--color-border)"
-            strokeWidth={1.5}
-          />
-        );
-      })}
+      {roadLines.map(([from, to]) => (
+        <line
+          key={`road-${from}-${to}`}
+          x1={px(from)}
+          y1={py(from)}
+          x2={px(to)}
+          y2={py(to)}
+          stroke="var(--color-border)"
+          strokeWidth={1.5}
+        />
+      ))}
 
       {board.railLines.map((line, i) => (
         <polyline
           key={`rail-${i}`}
-          points={line.map((id) => `${px(board.nodes[id].x)},${py(board.nodes[id].y)}`).join(" ")}
+          points={line.map((id) => `${px(id)},${py(id)}`).join(" ")}
           fill="none"
           stroke="var(--color-primary)"
           strokeWidth={3}
@@ -122,8 +132,8 @@ export function BoardCanvas({
         return (
           <g key={node.id} onClick={() => handleNodeClick(node.id)} style={{ cursor: "pointer" }}>
             <circle
-              cx={px(node.x)}
-              cy={py(node.y)}
+              cx={px(node.id)}
+              cy={py(node.id)}
               r={node.type === "mountain" ? CELL * 0.15 : CELL * 0.22}
               fill={fill}
               stroke={isLegal ? "var(--color-accent)" : "transparent"}
@@ -133,20 +143,17 @@ export function BoardCanvas({
         );
       })}
 
-      {[...pieceByNode.entries()].map(([nodeId, piece]) => {
-        const node = board.nodes[nodeId];
-        return (
-          <PieceToken
-            key={piece.id}
-            piece={piece}
-            cx={px(node.x)}
-            cy={py(node.y)}
-            isSelected={selectedNode === nodeId}
-            isSelectable={piece.seatIndex === seatIndex}
-            onClick={() => handleNodeClick(nodeId)}
-          />
-        );
-      })}
+      {[...pieceByNode.entries()].map(([nodeId, piece]) => (
+        <PieceToken
+          key={piece.id}
+          piece={piece}
+          cx={px(nodeId)}
+          cy={py(nodeId)}
+          isSelected={selectedNode === nodeId}
+          isSelectable={piece.seatIndex === seatIndex}
+          onClick={() => handleNodeClick(nodeId)}
+        />
+      ))}
     </svg>
   );
 }

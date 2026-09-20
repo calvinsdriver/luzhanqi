@@ -6,10 +6,13 @@ import type { GameState, Piece, PublicGameState, PublicPiece } from "./types";
  *
  * A piece's type is visible to `requestingSeat` when:
  *   - it belongs to that seat (you always see your own pieces), or
- *   - it has been `revealed` (took part in a prior combat), or
+ *   - it has been explicitly `revealed` (nothing currently sets this - by this game's house
+ *     rule, combat does NOT reveal either piece's identity, unlike the classic base rules -
+ *     but the flag stays here as a hook for any future disclosure mechanic), or
  *   - the game has ended, or
- *   - it is that owner's Flag and that owner's Field Marshal has been captured
- *     (the house rule confirmed for this game: losing your Field Marshal reveals your Flag).
+ *   - it is that owner's Flag and that owner's Field Marshal has been captured (the one
+ *     disclosure this house rule does have: losing your Field Marshal reveals your Flag,
+ *     and only your Flag - no other piece).
  */
 export function buildSeatView(fullState: GameState, requestingSeat: number): PublicGameState {
   const gameOver = fullState.status === "finished";

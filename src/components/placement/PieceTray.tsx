@@ -2,6 +2,7 @@
 
 import { ROSTER, type PieceType } from "@/lib/rules/types";
 import { PIECE_LABELS } from "@/lib/rules/pieceRanks";
+import { PieceIcon } from "@/components/board/pieceIcons";
 
 export function PieceTray({
   placedCounts,
@@ -25,12 +26,15 @@ export function PieceTray({
             type="button"
             disabled={remaining <= 0}
             onClick={() => onSelect(isSelected ? null : type)}
-            className={`flex flex-col items-center gap-0.5 rounded border px-2 py-2 text-xs transition-colors duration-150 ${
+            className={`flex flex-col items-center gap-1 rounded border px-2 py-2 text-xs transition-colors duration-150 ${
               isSelected
                 ? "border-accent bg-accent/10 text-accent"
                 : "border-border bg-surface-raised text-text"
             } ${remaining <= 0 ? "cursor-not-allowed opacity-40" : "cursor-pointer"}`}
           >
+            <svg viewBox="-16 -16 32 32" className="h-6 w-6">
+              <PieceIcon type={type} color={isSelected ? "var(--color-accent)" : "var(--color-text)"} size={11} />
+            </svg>
             <span className="font-heading">{PIECE_LABELS[type]}</span>
             <span className="text-text-muted">x{remaining}</span>
           </button>

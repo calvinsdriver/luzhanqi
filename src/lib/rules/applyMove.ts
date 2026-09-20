@@ -56,13 +56,11 @@ export function applyMove(
     (p) => p.nodeId === to && p.status === "in_play" && p.seatIndex !== seatIndex,
   );
 
+  // Per this game's house rule, combat never reveals a piece's identity - the opponent's
+  // side stays hidden for the whole game except for the one specific disclosure below
+  // (a captured Field Marshal reveals that seat's Flag, and only the Flag).
   const revealedTypes: MoveRecord["revealedTypes"] = [];
   let resultKind: MoveResultKind = "move";
-
-  const revealPiece = (piece: Piece, nodeId: NodeId) => {
-    piece.revealed = true;
-    revealedTypes.push({ nodeId, type: piece.type });
-  };
 
   const captureFieldMarshalIfApplicable = (piece: Piece) => {
     if (piece.type === "FIELD_MARSHAL" && piece.status === "captured") {
@@ -75,8 +73,6 @@ export function applyMove(
     movingPiece.nodeId = to;
   } else {
     const combat = resolveCombat(movingPiece.type, defenderPiece.type);
-    revealPiece(movingPiece, from);
-    revealPiece(defenderPiece, to);
     resultKind = combat.outcome;
 
     if (combat.attackerSurvives) {
@@ -103,7 +99,6 @@ export function applyMove(
           if (piece.seatIndex === defenderPiece.seatIndex && piece.status === "in_play") {
             piece.status = "captured";
             piece.nodeId = null;
-            piece.revealed = true;
           }
         }
       }

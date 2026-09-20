@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import type { BoardGraph, PieceType } from "@/lib/rules/types";
 import { validatePlacement, type PlacementEntry } from "@/lib/rules/placement";
-import { PIECE_LABELS } from "@/lib/rules/pieceRanks";
+import { PieceIcon } from "@/components/board/pieceIcons";
 import { PieceTray } from "./PieceTray";
 
 export function PlacementBoard({
@@ -88,7 +88,11 @@ export function PlacementBoard({
               className={`flex aspect-square cursor-pointer items-center justify-center rounded border border-border text-[11px] font-heading transition-colors duration-150 hover:border-accent ${bg}`}
               style={{ gridRow: node.row! + 1, gridColumn: node.col! + 1 }}
             >
-              {placed ? PIECE_LABELS[placed] : ""}
+              {placed && (
+                <svg viewBox="-16 -16 32 32" className="h-full w-full p-1.5">
+                  <PieceIcon type={placed} color="var(--color-accent)" size={12} />
+                </svg>
+              )}
             </button>
           );
         })}

@@ -1,7 +1,7 @@
 "use client";
 
 import type { PublicPiece } from "@/lib/rules/types";
-import { PIECE_LABELS } from "@/lib/rules/pieceRanks";
+import { PIECE_FULL_NAMES, PieceIcon } from "./pieceIcons";
 
 const CELL = 40;
 
@@ -21,7 +21,7 @@ export function PieceToken({
   onClick: () => void;
 }) {
   const team = piece.seatIndex % 2 === 0 ? "var(--color-team-a)" : "var(--color-team-b)";
-  const label = piece.type ? PIECE_LABELS[piece.type] : "?";
+  const title = piece.type ? PIECE_FULL_NAMES[piece.type] : "Unknown piece";
 
   return (
     <g
@@ -29,6 +29,7 @@ export function PieceToken({
       style={{ cursor: isSelectable ? "pointer" : "default" }}
       className="transition-opacity duration-150"
     >
+      <title>{title}</title>
       <circle
         cx={cx}
         cy={cy}
@@ -37,17 +38,9 @@ export function PieceToken({
         stroke={isSelected ? "var(--color-accent)" : "rgba(0,0,0,0.4)"}
         strokeWidth={isSelected ? 3 : 1}
       />
-      <text
-        x={cx}
-        y={cy}
-        textAnchor="middle"
-        dominantBaseline="central"
-        fontFamily="var(--font-body)"
-        fontSize={9}
-        fill="var(--color-text)"
-      >
-        {label}
-      </text>
+      <g transform={`translate(${cx}, ${cy})`}>
+        <PieceIcon type={piece.type} color="var(--color-text)" size={CELL * 0.19} />
+      </g>
     </g>
   );
 }
