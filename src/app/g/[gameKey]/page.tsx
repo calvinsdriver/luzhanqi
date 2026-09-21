@@ -12,6 +12,7 @@ import { GameOverBanner } from "@/components/gameover/GameOverBanner";
 import { useGameChannel } from "@/lib/client/useGameChannel";
 import { readToken } from "@/lib/client/localStorageKeys";
 import { boardForMode } from "@/lib/rules/boardForMode";
+import type { NodeId } from "@/lib/rules/types";
 import type { PlacementEntry } from "@/lib/rules/placement";
 
 export default function GamePage({ params }: PageProps<"/g/[gameKey]">) {
@@ -81,6 +82,22 @@ export default function GamePage({ params }: PageProps<"/g/[gameKey]">) {
     if (!result.ok) setMoveError(result.error ?? "Move failed");
   }
 
+  // Clicking the board during an active game means "select my piece, then click a
+  // highlighted destination to move it there" - BoardCanvas itself has no opinion on this,
+  // it just reports which node was clicked.
+  function handleBoardNodeClick(nodeId: NodeId) {
+    if (channel.selectedNode && channel.legalDestinations.includes(nodeId)) {
+      handleMove(channel.selectedNode, nodeId);
+      return;
+    }
+    const occupant = state!.pieces.find((p) => p.nodeId === nodeId && p.status === "in_play");
+    if (occupant && occupant.seatIndex === seatIndex) {
+      channel.selectNode(channel.selectedNode === nodeId ? null : nodeId);
+      return;
+    }
+    channel.selectNode(null);
+  }
+
   if (state.status === "lobby") {
     return (
       <div className="flex-1 px-4 py-16">
@@ -99,19 +116,14 @@ export default function GamePage({ params }: PageProps<"/g/[gameKey]">) {
       );
     }
     return (
-      <div className="flex-1 px-4 py-10">
-        {placementError && (
-          <p role="alert" className="mx-auto mb-4 max-w-2xl text-sm text-danger">
-            {placementError}
-          </p>
-        )}
-        <PlacementBoard
-          board={board}
-          seatIndex={seatIndex}
-          submitting={placementSubmitting}
-          onConfirm={handleConfirmPlacement}
-        />
-      </div>
+      <PlacementBoard
+        board={board}
+        seatIndex={seatIndex}
+        opponentPieces={state.pieces}
+        submitting={placementSubmitting}
+        error={placementError}
+        onConfirm={handleConfirmPlacement}
+      />
     );
   }
 
@@ -130,9 +142,8 @@ export default function GamePage({ params }: PageProps<"/g/[gameKey]">) {
             pieces={state.pieces}
             seatIndex={seatIndex}
             selectedNode={channel.selectedNode}
-            legalDestinations={state.status === "active" ? channel.legalDestinations : []}
-            onSelectNode={channel.selectNode}
-            onMove={handleMove}
+            highlightedNodes={state.status === "active" ? channel.legalDestinations : []}
+            onNodeClick={handleBoardNodeClick}
           />
         </div>
 

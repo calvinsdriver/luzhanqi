@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabaseBrowser } from "./supabaseBrowser";
 import { boardForMode } from "@/lib/rules/boardForMode";
 import { legalMoves } from "@/lib/rules/movement";
@@ -83,13 +83,13 @@ export function useGameChannel(gameKey: string, token: string | null): UseGameCh
 
   const seatIndex = data?.state.viewerSeat ?? -1;
 
-  const legalDestinations = (() => {
+  const legalDestinations = useMemo(() => {
     if (!selectedNode || !data) return [];
     const piece = data.state.pieces.find((p) => p.nodeId === selectedNode && p.status === "in_play");
     if (!piece || piece.seatIndex !== seatIndex || piece.type === null) return [];
     const board = boardForMode(data.mode);
     return legalMoves(board, data.state.pieces, selectedNode, piece.type, seatIndex);
-  })();
+  }, [selectedNode, data, seatIndex]);
 
   const selectNode = useCallback(
     (nodeId: NodeId | null) => setSelectedNode(nodeId),

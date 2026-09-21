@@ -8,24 +8,27 @@ import { PieceToken } from "./PieceToken";
 const CELL = 40;
 const PADDING = 1;
 
+/**
+ * Pure board renderer, shared by the live game screen and the placement screen. It only
+ * renders the board + pieces and reports clicks - it has no opinion on what a click means
+ * (move a piece, place a piece, etc.), so each caller supplies its own `onNodeClick`.
+ */
 export function BoardCanvas({
   board,
   pieces,
   seatIndex,
   selectedNode,
-  legalDestinations,
-  onSelectNode,
-  onMove,
+  highlightedNodes,
+  onNodeClick,
 }: {
   board: BoardGraph;
   pieces: PublicPiece[];
   seatIndex: number;
   selectedNode: NodeId | null;
-  legalDestinations: NodeId[];
-  onSelectNode: (nodeId: NodeId | null) => void;
-  onMove: (from: NodeId, to: NodeId) => void;
+  highlightedNodes: NodeId[];
+  onNodeClick: (nodeId: NodeId) => void;
 }) {
-  const nodes = Object.values(board.nodes);
+  const nodes = useMemo(() => Object.values(board.nodes), [board]);
 
   // Board data is authored in a fixed absolute layout (seat 0 always "north", etc.) - rotate
   // it per viewer here, purely for rendering, so your own seat always ends up at the bottom.
@@ -34,8 +37,7 @@ export function BoardCanvas({
     const map = new Map<NodeId, { x: number; y: number }>();
     for (const node of nodes) map.set(node.id, rotatePoint(node.x, node.y, rotationDeg));
     return map;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [board, rotationDeg]);
+  }, [nodes, rotationDeg]);
 
   const { minX, minY, width, height } = useMemo(() => {
     const points = [...rotated.values()];
@@ -71,20 +73,7 @@ export function BoardCanvas({
     return lines;
   }, [board]);
 
-  const legalSet = new Set(legalDestinations);
-
-  function handleNodeClick(nodeId: NodeId) {
-    if (selectedNode && legalSet.has(nodeId)) {
-      onMove(selectedNode, nodeId);
-      return;
-    }
-    const occupant = pieceByNode.get(nodeId);
-    if (occupant && occupant.seatIndex === seatIndex) {
-      onSelectNode(selectedNode === nodeId ? null : nodeId);
-      return;
-    }
-    onSelectNode(null);
-  }
+  const highlightSet = useMemo(() => new Set(highlightedNodes), [highlightedNodes]);
 
   return (
     <svg
@@ -120,7 +109,7 @@ export function BoardCanvas({
       ))}
 
       {nodes.map((node) => {
-        const isLegal = legalSet.has(node.id);
+        const isHighlighted = highlightSet.has(node.id);
         const fill =
           node.type === "mountain"
             ? "#000"
@@ -130,14 +119,14 @@ export function BoardCanvas({
                 ? "rgba(201,162,39,0.25)"
                 : "var(--color-surface-raised)";
         return (
-          <g key={node.id} onClick={() => handleNodeClick(node.id)} style={{ cursor: "pointer" }}>
+          <g key={node.id} onClick={() => onNodeClick(node.id)} style={{ cursor: "pointer" }}>
             <circle
               cx={px(node.id)}
               cy={py(node.id)}
               r={node.type === "mountain" ? CELL * 0.15 : CELL * 0.22}
               fill={fill}
-              stroke={isLegal ? "var(--color-accent)" : "transparent"}
-              strokeWidth={isLegal ? 3 : 0}
+              stroke={isHighlighted ? "var(--color-accent)" : "transparent"}
+              strokeWidth={isHighlighted ? 3 : 0}
             />
           </g>
         );
@@ -151,7 +140,7 @@ export function BoardCanvas({
           cy={py(nodeId)}
           isSelected={selectedNode === nodeId}
           isSelectable={piece.seatIndex === seatIndex}
-          onClick={() => handleNodeClick(nodeId)}
+          onClick={() => onNodeClick(nodeId)}
         />
       ))}
     </svg>
