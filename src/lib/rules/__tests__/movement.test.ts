@@ -117,6 +117,20 @@ describe("legalMoves - 4P hub is not restricted", () => {
     const destinations = legalMoves(BOARD_4P, pieces, "P0-3-0", "CAPTAIN", 0);
     expect(destinations).toContain("H-0-0"); // the hub corner this territory's rail feeds into
   });
+
+  it("a rail piece can cross straight through the hub's center to the opposite corner", () => {
+    // From a hub corner, the diagonal through-center rail reaches the opposite corner -
+    // e.g. all the way from the north territory's hub corner to the south territory's.
+    const pieces: OccupancyPiece[] = [piece("H-0-0", 0)];
+    const destinations = legalMoves(BOARD_4P, pieces, "H-0-0", "CAPTAIN", 0);
+    expect(destinations).toContain("H-2-2");
+  });
+
+  it("a rail piece entering at a hub mid-edge cell can cross straight through to the opposite mid-edge", () => {
+    const pieces: OccupancyPiece[] = [piece("H-1-0", 0)];
+    const destinations = legalMoves(BOARD_4P, pieces, "H-1-0", "CAPTAIN", 0);
+    expect(destinations).toContain("H-1-2"); // west mid-edge -> east mid-edge, straight through center
+  });
 });
 
 describe("legalMoves - stationary pieces", () => {
