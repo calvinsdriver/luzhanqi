@@ -5,7 +5,9 @@ import { generateReconnectToken, hashToken, tokenMatchesHash } from "./tokens";
 import { boardForMode } from "@/lib/rules/boardForMode";
 import { applyMove } from "@/lib/rules/applyMove";
 import { validatePlacement, type PlacementEntry } from "@/lib/rules/placement";
-import type { BoardGraph, GameState, MoveRecord, Piece, SeatState } from "@/lib/rules/types";
+import { buildSeatView } from "@/lib/rules/view";
+import { trimMoveLogForClient } from "./stateResponse";
+import type { BoardGraph, GameState, MoveRecord, Piece, PublicGameState, SeatState } from "@/lib/rules/types";
 
 export type RepoResult<T> = { ok: true; value: T } | { ok: false; error: string; status: number };
 
@@ -274,7 +276,7 @@ export async function makeMove(
   token: string,
   from: string,
   to: string,
-): Promise<RepoResult<{ move: MoveRecord }>> {
+): Promise<RepoResult<{ move: MoveRecord; state: PublicGameState }>> {
   const authorized = await authorizeSeat(shortKey, token);
   if (!authorized.ok) return fail(authorized.error, authorized.status);
   const { loaded, seatIndex } = authorized.value;
@@ -315,5 +317,8 @@ export async function makeMove(
     return fail("Someone else already moved - refresh and try again", 409);
   }
 
-  return ok({ move: result.move });
+  // The move's resulting state is already sitting in memory from applyMove() above - no
+  // need for the route handler to pay for a second round trip (a follow-up GET /state)
+  // just to hand the client something it can already be given here for free.
+  return ok({ move: result.move, state: trimMoveLogForClient(buildSeatView(result.nextState, seatIndex)) });
 }

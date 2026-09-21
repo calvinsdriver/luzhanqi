@@ -3,10 +3,9 @@
 import { memo } from "react";
 import type { PublicPiece } from "@/lib/rules/types";
 import { PIECE_FULL_NAMES, PieceIcon } from "./pieceIcons";
-import { PIECE_LABELS } from "@/lib/rules/pieceRanks";
 
 const CELL = 40;
-const TOKEN = CELL * 0.72;
+const TOKEN = CELL * 0.9;
 
 function PieceTokenImpl({
   piece,
@@ -22,15 +21,17 @@ function PieceTokenImpl({
   isSelectable: boolean;
 }) {
   const team = piece.seatIndex % 2 === 0 ? "var(--color-team-a)" : "var(--color-team-b)";
-  const title = piece.type ? PIECE_FULL_NAMES[piece.type] : "Unknown piece";
-  const label = piece.type ? PIECE_LABELS[piece.type] : null;
+  const fullName = piece.type ? PIECE_FULL_NAMES[piece.type] : "Unknown piece";
+  // Full titles never fit on one line at board scale ("Brigadier General", "Field Marshal",
+  // ...) - wrap onto a second line at the space rather than truncating or abbreviating.
+  const nameLines = piece.type ? fullName.split(" ") : ["?"];
 
   return (
     // data-node-id, not an onClick prop: BoardCanvas handles all clicks via a single
     // delegated listener on the <svg> root (see BoardCanvas.tsx for why - a per-piece
     // callback prop here previously caused a real bug with this component memoized).
     <g data-node-id={piece.nodeId ?? undefined} style={{ cursor: isSelectable ? "pointer" : "default" }}>
-      <title>{title}</title>
+      <title>{fullName}</title>
       <rect
         x={cx - TOKEN / 2}
         y={cy - TOKEN / 2}
@@ -41,23 +42,24 @@ function PieceTokenImpl({
         stroke={isSelected ? "var(--color-accent)" : "rgba(0,0,0,0.4)"}
         strokeWidth={isSelected ? 3 : 1}
       />
-      <g transform={`translate(${cx}, ${cy - TOKEN * 0.16})`}>
-        <PieceIcon type={piece.type} color="var(--color-text)" size={TOKEN * 0.24} />
+      <g transform={`translate(${cx}, ${cy - TOKEN * 0.26})`}>
+        <PieceIcon type={piece.type} color="var(--color-text)" size={TOKEN * 0.2} />
       </g>
-      {label && (
+      {nameLines.map((line, i) => (
         <text
+          key={i}
           x={cx}
-          y={cy + TOKEN * 0.33}
+          y={cy + TOKEN * 0.14 + i * TOKEN * 0.155}
           textAnchor="middle"
           dominantBaseline="central"
           fontFamily="var(--font-body)"
           fontWeight={600}
-          fontSize={TOKEN * 0.2}
+          fontSize={TOKEN * 0.135}
           fill="var(--color-text)"
         >
-          {label}
+          {line}
         </text>
-      )}
+      ))}
     </g>
   );
 }

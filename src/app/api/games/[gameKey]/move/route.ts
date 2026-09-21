@@ -18,5 +18,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }
-  return NextResponse.json({ move: result.value.move });
+  // Includes the resulting masked state so the client can update immediately instead of
+  // needing a second round trip (a follow-up GET /state) just to see its own move applied.
+  return NextResponse.json({ move: result.value.move, state: result.value.state });
 }

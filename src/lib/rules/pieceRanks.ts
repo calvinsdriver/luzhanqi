@@ -13,18 +13,3 @@ export function rankOf(type: PieceType): number | undefined {
 export function isRankedOfficer(type: PieceType): boolean {
   return RANK_VALUE[type] !== undefined;
 }
-
-export const PIECE_LABELS: Record<PieceType, string> = {
-  FIELD_MARSHAL: "FM",
-  GENERAL: "GEN",
-  MAJOR_GENERAL: "MG",
-  BRIGADIER_GENERAL: "BG",
-  COLONEL: "COL",
-  MAJOR: "MAJ",
-  CAPTAIN: "CPT",
-  LIEUTENANT: "LT",
-  ENGINEER: "ENG",
-  LANDMINE: "MINE",
-  BOMB: "BOMB",
-  FLAG: "FLAG",
-};

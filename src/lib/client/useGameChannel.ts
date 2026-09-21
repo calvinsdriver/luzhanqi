@@ -70,7 +70,7 @@ export function useGameChannel(gameKey: string, token: string | null): UseGameCh
         { event: "INSERT", schema: "public", table: "game_events", filter: `game_id=eq.${data.gameId}` },
         () => {
           if (debounceRef.current) clearTimeout(debounceRef.current);
-          debounceRef.current = setTimeout(fetchState, 150);
+          debounceRef.current = setTimeout(fetchState, 80);
         },
       )
       .subscribe();
@@ -107,10 +107,14 @@ export function useGameChannel(gameKey: string, token: string | null): UseGameCh
       const body = await res.json();
       if (!res.ok) return { ok: false, error: body.error ?? "Move failed" };
       setSelectedNode(null);
-      await fetchState();
+      // The move response already carries the resulting state - apply it directly rather
+      // than waiting on a second round trip (a follow-up GET /state) just to see our own
+      // move reflected. Other viewers still pick it up the normal way, via the realtime
+      // game_events signal.
+      setData((prev) => (prev ? { ...prev, state: body.state } : prev));
       return { ok: true };
     },
-    [gameKey, token, fetchState],
+    [gameKey, token],
   );
 
   return {

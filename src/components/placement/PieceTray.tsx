@@ -1,8 +1,7 @@
 "use client";
 
 import { ROSTER, type PieceType } from "@/lib/rules/types";
-import { PIECE_LABELS } from "@/lib/rules/pieceRanks";
-import { PieceIcon } from "@/components/board/pieceIcons";
+import { PIECE_FULL_NAMES, PieceIcon } from "@/components/board/pieceIcons";
 
 export function PieceTray({
   placedCounts,
@@ -35,7 +34,7 @@ export function PieceTray({
             <svg viewBox="-16 -16 32 32" className="h-6 w-6">
               <PieceIcon type={type} color={isSelected ? "var(--color-accent)" : "var(--color-text)"} size={11} />
             </svg>
-            <span className="font-heading">{PIECE_LABELS[type]}</span>
+            <span className="text-center font-heading leading-tight">{PIECE_FULL_NAMES[type]}</span>
             <span className="text-text-muted">x{remaining}</span>
           </button>
         );

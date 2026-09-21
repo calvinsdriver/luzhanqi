@@ -6,8 +6,7 @@ import { WaitingRoom } from "@/components/lobby/WaitingRoom";
 import { PlacementBoard } from "@/components/placement/PlacementBoard";
 import { BoardCanvas } from "@/components/board/BoardCanvas";
 import { TurnIndicator } from "@/components/board/TurnIndicator";
-import { CapturedPiecesPanel } from "@/components/board/CapturedPiecesPanel";
-import { MoveLogPanel } from "@/components/board/MoveLogPanel";
+import { SacrificedBanner } from "@/components/board/SacrificedBanner";
 import { GameOverBanner } from "@/components/gameover/GameOverBanner";
 import { useGameChannel } from "@/lib/client/useGameChannel";
 import { useGameSounds } from "@/lib/client/useGameSounds";
@@ -156,14 +155,7 @@ export default function GamePage({ params }: PageProps<"/g/[gameKey]">) {
               {moveError}
             </p>
           )}
-          <div>
-            <h3 className="mb-1 text-xs uppercase tracking-wide text-text-muted">Captured</h3>
-            <CapturedPiecesPanel state={state} />
-          </div>
-          <div>
-            <h3 className="mb-1 text-xs uppercase tracking-wide text-text-muted">Move log</h3>
-            <MoveLogPanel state={state} />
-          </div>
+          <SacrificedBanner state={state} seatIndex={seatIndex} />
         </div>
       </div>
     </div>
