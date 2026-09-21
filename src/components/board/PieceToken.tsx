@@ -14,25 +14,22 @@ function PieceTokenImpl({
   cy,
   isSelected,
   isSelectable,
-  onClick,
 }: {
   piece: PublicPiece;
   cx: number;
   cy: number;
   isSelected: boolean;
   isSelectable: boolean;
-  onClick: () => void;
 }) {
   const team = piece.seatIndex % 2 === 0 ? "var(--color-team-a)" : "var(--color-team-b)";
   const title = piece.type ? PIECE_FULL_NAMES[piece.type] : "Unknown piece";
   const label = piece.type ? PIECE_LABELS[piece.type] : null;
 
   return (
-    <g
-      onClick={onClick}
-      style={{ cursor: isSelectable ? "pointer" : "default" }}
-      className="transition-opacity duration-150"
-    >
+    // data-node-id, not an onClick prop: BoardCanvas handles all clicks via a single
+    // delegated listener on the <svg> root (see BoardCanvas.tsx for why - a per-piece
+    // callback prop here previously caused a real bug with this component memoized).
+    <g data-node-id={piece.nodeId ?? undefined} style={{ cursor: isSelectable ? "pointer" : "default" }}>
       <title>{title}</title>
       <rect
         x={cx - TOKEN / 2}
@@ -84,5 +81,7 @@ function propsAreEqual(
 /** Board tokens can number in the hundreds on the 4P board, so this is memoized against a
  * shallow field comparison rather than the default reference-equality check - the piece
  * objects arriving from the poll-and-refetch state hook are freshly parsed JSON every time,
- * so reference equality alone would defeat memoization entirely. */
+ * so reference equality alone would defeat memoization entirely. Every field that affects
+ * rendering is listed above, and (unlike an earlier version of this component) there is no
+ * callback prop left for that list to ever miss. */
 export const PieceToken = memo(PieceTokenImpl, propsAreEqual);

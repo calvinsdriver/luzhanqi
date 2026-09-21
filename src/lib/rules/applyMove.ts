@@ -1,7 +1,7 @@
 import type { BoardGraph, GameState, MoveRecord, MoveResultKind, NodeId, Piece } from "./types";
 import { legalMoves } from "./movement";
 import { resolveCombat } from "./combat";
-import { checkWinner } from "./winCondition";
+import { checkTie, checkWinner } from "./winCondition";
 
 export type ApplyMoveResult =
   | { ok: true; nextState: GameState; move: MoveRecord }
@@ -114,10 +114,6 @@ export function applyMove(
     }
   }
 
-  const winner = checkWinner(seats, state.mode);
-  const status = winner ? "finished" : state.status;
-  const currentTurnSeat = winner ? state.currentTurnSeat : nextSeatIndex({ ...state, seats });
-
   const move: MoveRecord = {
     seq: state.moveLog.length + 1,
     seatIndex,
@@ -126,6 +122,11 @@ export function applyMove(
     result: resultKind,
     revealedTypes,
   };
+  const moveLog = [...state.moveLog, move];
+
+  const winner = checkWinner(seats, state.mode) ?? checkTie(moveLog, state.mode);
+  const status = winner ? "finished" : state.status;
+  const currentTurnSeat = winner ? state.currentTurnSeat : nextSeatIndex({ ...state, seats });
 
   const nextState: GameState = {
     ...state,
@@ -134,7 +135,7 @@ export function applyMove(
     status,
     currentTurnSeat,
     winner,
-    moveLog: [...state.moveLog, move],
+    moveLog,
   };
 
   return { ok: true, nextState, move };

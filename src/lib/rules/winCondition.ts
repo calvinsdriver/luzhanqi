@@ -1,4 +1,34 @@
-import type { GameState, SeatState, WinnerInfo } from "./types";
+import type { GameState, MoveRecord, SeatState, WinnerInfo } from "./types";
+
+/** Moves-per-seat with no attack before the game is called a tie. */
+export const TIE_MOVES_PER_SEAT = 15;
+
+/**
+ * Counts consecutive non-combat moves at the end of the log. Scanning backward from the
+ * most recent move (rather than tracking a separate persisted counter) means this stays
+ * correct even though the move log clients are shown is capped to a recent window - the
+ * scan here always runs against the full history the server has.
+ */
+export function countMovesSinceLastAttack(moveLog: MoveRecord[]): number {
+  let count = 0;
+  for (let i = moveLog.length - 1; i >= 0; i--) {
+    if (moveLog[i].result !== "move") break;
+    count++;
+  }
+  return count;
+}
+
+/**
+ * No attack for `TIE_MOVES_PER_SEAT` moves from EACH seat (a stalling deterrent, since
+ * Luzhanqi has no other forced-progress rule) ends the game in a tie.
+ */
+export function checkTie(moveLog: MoveRecord[], mode: GameState["mode"]): WinnerInfo | null {
+  const seatCount = mode === "2p" ? 2 : 4;
+  if (countMovesSinceLastAttack(moveLog) >= TIE_MOVES_PER_SEAT * seatCount) {
+    return { seats: [], reason: "tie" };
+  }
+  return null;
+}
 
 /**
  * Re-derives the win state purely from seats' flagCaptured flags, so the state-fetch

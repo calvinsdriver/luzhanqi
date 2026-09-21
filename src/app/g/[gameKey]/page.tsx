@@ -10,6 +10,7 @@ import { CapturedPiecesPanel } from "@/components/board/CapturedPiecesPanel";
 import { MoveLogPanel } from "@/components/board/MoveLogPanel";
 import { GameOverBanner } from "@/components/gameover/GameOverBanner";
 import { useGameChannel } from "@/lib/client/useGameChannel";
+import { useGameSounds } from "@/lib/client/useGameSounds";
 import { readToken } from "@/lib/client/localStorageKeys";
 import { boardForMode } from "@/lib/rules/boardForMode";
 import type { NodeId } from "@/lib/rules/types";
@@ -31,6 +32,7 @@ export default function GamePage({ params }: PageProps<"/g/[gameKey]">) {
   }, [gameKey]);
 
   const channel = useGameChannel(gameKey, token ?? null);
+  useGameSounds(channel.state);
 
   if (token === undefined) return null; // reading localStorage
   if (token === null) {

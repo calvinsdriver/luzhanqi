@@ -107,8 +107,9 @@ export type MoveResultKind =
   | "flag_captured";
 
 export interface WinnerInfo {
+  /** Empty for a tie - nobody wins, so there's no seat list to show. */
   seats: number[];
-  reason: "flag_captured" | "team_eliminated";
+  reason: "flag_captured" | "team_eliminated" | "tie";
 }
 
 export interface GameState {

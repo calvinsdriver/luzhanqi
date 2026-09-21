@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, type MouseEvent } from "react";
 import type { BoardGraph, NodeId, PublicPiece } from "@/lib/rules/types";
 import { rotatePoint, viewerRotationDegrees } from "@/lib/client/boardOrientation";
 import { PieceToken } from "./PieceToken";
@@ -75,6 +75,20 @@ export function BoardCanvas({
 
   const highlightSet = useMemo(() => new Set(highlightedNodes), [highlightedNodes]);
 
+  // A single delegated click handler, rather than a fresh onClick closure per node/piece.
+  // This matters for correctness, not just tidiness: PieceToken is memoized against a
+  // shallow field comparison (see PieceToken.tsx) precisely because handing it a fresh
+  // per-render callback prop previously caused a real bug - a memoized token would keep
+  // using whichever callback closure was captured the last time it actually re-rendered,
+  // silently going stale (most visibly, clicking an enemy piece to attack could resolve
+  // against long-outdated selection state). Delegation sidesteps the problem entirely by
+  // never handing a callback down to an individual node/piece in the first place.
+  function handleSvgClick(event: MouseEvent<SVGSVGElement>) {
+    const target = (event.target as Element).closest("[data-node-id]");
+    const nodeId = target?.getAttribute("data-node-id");
+    if (nodeId) onNodeClick(nodeId);
+  }
+
   return (
     <svg
       viewBox={`0 0 ${width} ${height}`}
@@ -83,6 +97,7 @@ export function BoardCanvas({
       preserveAspectRatio="xMidYMid meet"
       role="img"
       aria-label="Luzhanqi board"
+      onClick={handleSvgClick}
     >
       {roadLines.map(([from, to]) => (
         <line
@@ -119,7 +134,7 @@ export function BoardCanvas({
                 ? "rgba(201,162,39,0.25)"
                 : "var(--color-surface-raised)";
         return (
-          <g key={node.id} onClick={() => onNodeClick(node.id)} style={{ cursor: "pointer" }}>
+          <g key={node.id} data-node-id={node.id} style={{ cursor: "pointer" }}>
             <circle
               cx={px(node.id)}
               cy={py(node.id)}
@@ -140,7 +155,6 @@ export function BoardCanvas({
           cy={py(nodeId)}
           isSelected={selectedNode === nodeId}
           isSelectable={piece.seatIndex === seatIndex}
-          onClick={() => onNodeClick(nodeId)}
         />
       ))}
     </svg>

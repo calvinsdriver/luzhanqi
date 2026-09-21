@@ -173,3 +173,39 @@ describe("applyMove - 4P alliances", () => {
     expect(result.nextState.winner).toEqual({ seats: [1, 3], reason: "team_eliminated" });
   });
 });
+
+describe("applyMove - tie by inactivity", () => {
+  it("ends the game in a tie after 15 moves per seat with no attack, not one move sooner", () => {
+    let state = baseState2p([
+      piece({ id: "a", type: "CAPTAIN", seatIndex: 0, nodeId: "P0-2-0" }),
+      piece({ id: "b", type: "CAPTAIN", seatIndex: 1, nodeId: "P1-2-0" }),
+    ]);
+
+    // Shuffle each piece back and forth between two empty squares - never a combat move.
+    for (let round = 0; round < 15; round++) {
+      const seat0From = round % 2 === 0 ? "P0-2-0" : "P0-1-0";
+      const seat0To = round % 2 === 0 ? "P0-1-0" : "P0-2-0";
+      const seat1From = round % 2 === 0 ? "P1-2-0" : "P1-1-0";
+      const seat1To = round % 2 === 0 ? "P1-1-0" : "P1-2-0";
+
+      const move0 = applyMove(BOARD_2P, state, 0, seat0From, seat0To);
+      expect(move0.ok).toBe(true);
+      if (!move0.ok) return;
+      state = move0.nextState;
+
+      const isLastHalfMove = round === 14;
+      const move1 = applyMove(BOARD_2P, state, 1, seat1From, seat1To);
+      expect(move1.ok).toBe(true);
+      if (!move1.ok) return;
+      state = move1.nextState;
+
+      if (isLastHalfMove) {
+        expect(state.status).toBe("finished");
+        expect(state.winner).toEqual({ seats: [], reason: "tie" });
+      } else {
+        expect(state.status).toBe("active");
+        expect(state.winner).toBeNull();
+      }
+    }
+  });
+});
