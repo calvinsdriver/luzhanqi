@@ -3,9 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { saveToken } from "@/lib/client/localStorageKeys";
+import { useLanguage } from "@/lib/client/i18n/LanguageContext";
+import { translateServerError } from "@/lib/client/i18n/translateServerError";
 
 export function CreateGameForm() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [nickname, setNickname] = useState("");
   const [mode, setMode] = useState<"2p" | "4p">("2p");
   const [submitting, setSubmitting] = useState(false);
@@ -23,13 +26,13 @@ export function CreateGameForm() {
       });
       const body = await res.json();
       if (!res.ok) {
-        setError(body.error ?? "Could not create the game");
+        setError(body.error ? translateServerError(body.error, t) : t("error.couldNotCreate"));
         return;
       }
       saveToken(body.gameKey, body.reconnectToken);
       router.push(`/g/${body.gameKey}`);
     } catch {
-      setError("Network error - please try again");
+      setError(t("error.networkError"));
     } finally {
       setSubmitting(false);
     }
@@ -40,22 +43,22 @@ export function CreateGameForm() {
       onSubmit={handleSubmit}
       className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-6"
     >
-      <h2 className="font-heading text-lg tracking-wide text-accent">Start a new game</h2>
+      <h2 className="font-heading text-lg tracking-wide text-accent">{t("home.create.title")}</h2>
 
       <label className="flex flex-col gap-1 text-sm">
-        Your nickname
+        {t("home.create.nicknameLabel")}
         <input
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
           maxLength={24}
           required
-          placeholder="Commander"
+          placeholder={t("home.create.nicknamePlaceholder")}
           className="rounded border border-border bg-surface-raised px-3 py-2 text-text outline-none focus:border-accent focus:ring-2 focus:ring-accent/40"
         />
       </label>
 
       <fieldset className="flex flex-col gap-2 text-sm">
-        <legend className="mb-1">Players</legend>
+        <legend className="mb-1">{t("home.create.playersLabel")}</legend>
         <div className="flex gap-3">
           {(["2p", "4p"] as const).map((value) => (
             <label
@@ -74,7 +77,7 @@ export function CreateGameForm() {
                 onChange={() => setMode(value)}
                 className="sr-only"
               />
-              {value === "2p" ? "2 Players" : "4 Players"}
+              {value === "2p" ? t("home.create.players2") : t("home.create.players4")}
             </label>
           ))}
         </div>
@@ -91,7 +94,7 @@ export function CreateGameForm() {
         disabled={submitting}
         className="cursor-pointer rounded bg-accent px-4 py-2 font-heading text-sm tracking-wide text-background transition-colors duration-150 hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {submitting ? "Creating..." : "Create Game"}
+        {submitting ? t("home.create.submitting") : t("home.create.submit")}
       </button>
     </form>
   );

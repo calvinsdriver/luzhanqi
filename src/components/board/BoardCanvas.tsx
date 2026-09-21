@@ -4,8 +4,8 @@ import { useMemo, type MouseEvent } from "react";
 import type { BoardGraph, NodeId, PublicPiece } from "@/lib/rules/types";
 import { rotatePoint, viewerRotationDegrees } from "@/lib/client/boardOrientation";
 import { PieceToken } from "./PieceToken";
+import { CELL_X, CELL_Y } from "./boardLayout";
 
-const CELL = 40;
 const PADDING = 1;
 
 /**
@@ -47,11 +47,13 @@ export function BoardCanvas({
     const minY = Math.min(...ys) - PADDING;
     const maxX = Math.max(...xs) + PADDING;
     const maxY = Math.max(...ys) + PADDING;
-    return { minX, minY, width: (maxX - minX) * CELL, height: (maxY - minY) * CELL };
+    // Stretched horizontally (CELL_X > CELL_Y) - wider, not taller - to leave room for
+    // piece tokens that hold a full title. See boardLayout.ts.
+    return { minX, minY, width: (maxX - minX) * CELL_X, height: (maxY - minY) * CELL_Y };
   }, [rotated]);
 
-  const px = (nodeId: NodeId) => (rotated.get(nodeId)!.x - minX) * CELL;
-  const py = (nodeId: NodeId) => (rotated.get(nodeId)!.y - minY) * CELL;
+  const px = (nodeId: NodeId) => (rotated.get(nodeId)!.x - minX) * CELL_X;
+  const py = (nodeId: NodeId) => (rotated.get(nodeId)!.y - minY) * CELL_Y;
 
   const pieceByNode = useMemo(() => {
     const map = new Map<NodeId, PublicPiece>();
@@ -138,7 +140,7 @@ export function BoardCanvas({
             <circle
               cx={px(node.id)}
               cy={py(node.id)}
-              r={node.type === "mountain" ? CELL * 0.15 : CELL * 0.22}
+              r={node.type === "mountain" ? CELL_Y * 0.15 : CELL_Y * 0.22}
               fill={fill}
               stroke={isHighlighted ? "var(--color-accent)" : "transparent"}
               strokeWidth={isHighlighted ? 3 : 0}

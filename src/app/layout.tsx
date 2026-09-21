@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Russo_One, Chakra_Petch } from "next/font/google";
+import { LanguageProvider } from "@/lib/client/i18n/LanguageContext";
 import "./globals.css";
 
 const russoOne = Russo_One({
@@ -22,7 +23,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${russoOne.variable} ${chakraPetch.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-background text-text">{children}</body>
+      <body className="min-h-full flex flex-col bg-background text-text">
+        <LanguageProvider>{children}</LanguageProvider>
+      </body>
     </html>
   );
 }

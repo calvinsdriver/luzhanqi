@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import type { PublicGameState } from "@/lib/rules/types";
+import { useLanguage } from "@/lib/client/i18n/LanguageContext";
 
 export function WaitingRoom({ gameKey, state }: { gameKey: string; state: PublicGameState }) {
+  const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
   const seatCount = state.mode === "2p" ? 2 : 4;
   const seats = Array.from({ length: seatCount }, (_, i) => state.seats.find((s) => s.seatIndex === i));
@@ -21,9 +23,11 @@ export function WaitingRoom({ gameKey, state }: { gameKey: string; state: Public
   return (
     <div className="mx-auto flex max-w-md flex-col gap-6 rounded-lg border border-border bg-surface p-6">
       <div>
-        <h2 className="font-heading text-lg tracking-wide text-accent">Waiting for players</h2>
+        <h2 className="font-heading text-lg tracking-wide text-accent">{t("waitingroom.title")}</h2>
         <p className="text-sm text-text-muted">
-          Share this key with {seatCount - 1} other {seatCount - 1 === 1 ? "player" : "players"}.
+          {seatCount - 1 === 1
+            ? t("waitingroom.shareKeyOne")
+            : t("waitingroom.shareKeyMany", { n: seatCount - 1 })}
         </p>
       </div>
 
@@ -31,11 +35,11 @@ export function WaitingRoom({ gameKey, state }: { gameKey: string; state: Public
         type="button"
         onClick={copyKey}
         className="cursor-pointer rounded border border-accent bg-surface-raised px-4 py-3 text-center font-heading text-2xl tracking-[0.3em] text-accent transition-colors duration-150 hover:bg-accent/10"
-        aria-label="Copy game key"
+        aria-label={t("waitingroom.copyAria")}
       >
         {gameKey}
         <span className="ml-3 text-xs font-body tracking-normal text-text-muted">
-          {copied ? "Copied!" : "Click to copy"}
+          {copied ? t("waitingroom.copied") : t("waitingroom.clickToCopy")}
         </span>
       </button>
 
@@ -45,9 +49,9 @@ export function WaitingRoom({ gameKey, state }: { gameKey: string; state: Public
             key={i}
             className="flex items-center justify-between rounded border border-border bg-surface-raised px-3 py-2 text-sm"
           >
-            <span>Seat {i + 1}</span>
+            <span>{t("waitingroom.seat", { n: i + 1 })}</span>
             <span className={seat ? "text-text" : "text-text-muted"}>
-              {seat ? seat.nickname : "Waiting for a player..."}
+              {seat ? seat.nickname : t("waitingroom.waitingForPlayer")}
             </span>
           </li>
         ))}

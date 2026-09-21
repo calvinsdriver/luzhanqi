@@ -26,8 +26,11 @@
   --color-text-muted: var(--color-text-muted);
   --color-danger: var(--color-danger);
   --color-border: var(--color-border);
-  --font-heading: var(--font-russo-one);
-  --font-body: var(--font-chakra-petch);
+  /* Russo One / Chakra Petch only cover Latin glyphs - Chinese characters fall through
+     per-glyph to these CJK-capable system fonts instead, so switching to Chinese never
+     renders as tofu/missing boxes. */
+  --font-heading: var(--font-russo-one), "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  --font-body: var(--font-chakra-petch), "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
 }
 
 body {

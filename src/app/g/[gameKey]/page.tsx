@@ -8,8 +8,11 @@ import { BoardCanvas } from "@/components/board/BoardCanvas";
 import { TurnIndicator } from "@/components/board/TurnIndicator";
 import { SacrificedBanner } from "@/components/board/SacrificedBanner";
 import { GameOverBanner } from "@/components/gameover/GameOverBanner";
+import { GameHeader } from "@/components/layout/GameHeader";
 import { useGameChannel } from "@/lib/client/useGameChannel";
 import { useGameSounds } from "@/lib/client/useGameSounds";
+import { useLanguage } from "@/lib/client/i18n/LanguageContext";
+import { translateServerError } from "@/lib/client/i18n/translateServerError";
 import { readToken } from "@/lib/client/localStorageKeys";
 import { boardForMode } from "@/lib/rules/boardForMode";
 import type { NodeId } from "@/lib/rules/types";
@@ -17,6 +20,7 @@ import type { PlacementEntry } from "@/lib/rules/placement";
 
 export default function GamePage({ params }: PageProps<"/g/[gameKey]">) {
   const { gameKey } = use(params);
+  const { t } = useLanguage();
   const [token, setToken] = useState<string | null | undefined>(undefined);
   const [placementSubmitting, setPlacementSubmitting] = useState(false);
   const [placementError, setPlacementError] = useState<string | null>(null);
@@ -39,7 +43,7 @@ export default function GamePage({ params }: PageProps<"/g/[gameKey]">) {
       <div className="flex flex-1 items-center justify-center px-4 py-16">
         <div className="w-full max-w-md">
           <p className="mb-4 text-center text-sm text-text-muted">
-            You haven&apos;t joined game <span className="text-accent">{gameKey}</span> yet.
+            {t("gamepage.notJoined", { key: gameKey })}
           </p>
           <JoinGameForm initialGameKey={gameKey} />
         </div>
@@ -48,10 +52,14 @@ export default function GamePage({ params }: PageProps<"/g/[gameKey]">) {
   }
 
   if (channel.loading) {
-    return <p className="flex-1 p-8 text-center text-text-muted">Loading...</p>;
+    return <p className="flex-1 p-8 text-center text-text-muted">{t("gamepage.loading")}</p>;
   }
   if (channel.error || !channel.state || !channel.mode) {
-    return <p className="flex-1 p-8 text-center text-danger" role="alert">{channel.error ?? "Something went wrong"}</p>;
+    return (
+      <p className="flex-1 p-8 text-center text-danger" role="alert">
+        {channel.error ? translateServerError(channel.error, t) : t("error.somethingWentWrong")}
+      </p>
+    );
   }
 
   const { state, mode, seatIndex } = channel;
@@ -68,7 +76,7 @@ export default function GamePage({ params }: PageProps<"/g/[gameKey]">) {
       });
       const body = await res.json();
       if (!res.ok) {
-        setPlacementError(body.error ?? "Could not confirm placement");
+        setPlacementError(body.error ? translateServerError(body.error, t) : t("error.couldNotConfirm"));
         return;
       }
       await channel.refetch();
@@ -80,7 +88,7 @@ export default function GamePage({ params }: PageProps<"/g/[gameKey]">) {
   async function handleMove(from: string, to: string) {
     setMoveError(null);
     const result = await channel.submitMove(from, to);
-    if (!result.ok) setMoveError(result.error ?? "Move failed");
+    if (!result.ok) setMoveError(result.error ? translateServerError(result.error, t) : t("error.moveFailed"));
   }
 
   // Clicking the board during an active game means "select my piece, then click a
@@ -102,6 +110,7 @@ export default function GamePage({ params }: PageProps<"/g/[gameKey]">) {
   if (state.status === "lobby") {
     return (
       <div className="flex-1 px-4 py-16">
+        <GameHeader gameKey={gameKey} subtitleKey="header.waitingRoom" />
         <WaitingRoom gameKey={gameKey} state={state} />
       </div>
     );
@@ -112,13 +121,17 @@ export default function GamePage({ params }: PageProps<"/g/[gameKey]">) {
     if (mySeat?.placementConfirmed) {
       return (
         <div className="flex flex-1 items-center justify-center px-4 py-16">
-          <p className="text-text-muted">Waiting for other players to finish placing their pieces...</p>
+          <div className="w-full max-w-md rounded-lg border border-border bg-surface p-6 text-center">
+            <GameHeader gameKey={gameKey} />
+            <p className="text-text-muted">{t("placement.waitingForOthers")}</p>
+          </div>
         </div>
       );
     }
     return (
       <PlacementBoard
         board={board}
+        gameKey={gameKey}
         seatIndex={seatIndex}
         opponentPieces={state.pieces}
         submitting={placementSubmitting}
@@ -130,6 +143,8 @@ export default function GamePage({ params }: PageProps<"/g/[gameKey]">) {
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden px-4 py-3">
+      <GameHeader gameKey={gameKey} subtitleKey={state.status === "finished" ? "header.gameOver" : "header.battle"} />
+
       {state.status === "finished" && (
         <div className="mx-auto mb-3 w-full max-w-3xl flex-shrink-0">
           <GameOverBanner state={state} />
@@ -137,7 +152,7 @@ export default function GamePage({ params }: PageProps<"/g/[gameKey]">) {
       )}
 
       <div className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col gap-4 lg:flex-row">
-        <div className="flex min-h-0 min-w-0 flex-1 items-center justify-center">
+        <div className="flex min-h-0 min-w-0 flex-1 items-center justify-center rounded-lg border border-border bg-surface p-3">
           <BoardCanvas
             board={board}
             pieces={state.pieces}
@@ -148,7 +163,7 @@ export default function GamePage({ params }: PageProps<"/g/[gameKey]">) {
           />
         </div>
 
-        <div className="flex w-full flex-shrink-0 flex-col gap-4 overflow-y-auto lg:w-64 lg:max-h-full">
+        <div className="flex w-full flex-shrink-0 flex-col gap-4 overflow-y-auto rounded-lg border border-border bg-surface p-4 lg:w-64 lg:max-h-full">
           <TurnIndicator state={state} seatIndex={seatIndex} />
           {moveError && (
             <p role="alert" className="text-xs text-danger">

@@ -2,10 +2,10 @@
 
 import { memo } from "react";
 import type { PublicPiece } from "@/lib/rules/types";
-import { PIECE_FULL_NAMES, PieceIcon } from "./pieceIcons";
-
-const CELL = 40;
-const TOKEN = CELL * 0.9;
+import { PieceIcon } from "./pieceIcons";
+import { TOKEN_HEIGHT, TOKEN_WIDTH } from "./boardLayout";
+import { useLanguage } from "@/lib/client/i18n/LanguageContext";
+import type { TranslationKey } from "@/lib/client/i18n/translations";
 
 function PieceTokenImpl({
   piece,
@@ -20,11 +20,13 @@ function PieceTokenImpl({
   isSelected: boolean;
   isSelectable: boolean;
 }) {
+  const { t } = useLanguage();
   const team = piece.seatIndex % 2 === 0 ? "var(--color-team-a)" : "var(--color-team-b)";
-  const fullName = piece.type ? PIECE_FULL_NAMES[piece.type] : "Unknown piece";
+  const fullName = piece.type ? t(`piece.${piece.type}` as TranslationKey) : t("piece.unknown");
   // Full titles never fit on one line at board scale ("Brigadier General", "Field Marshal",
-  // ...) - wrap onto a second line at the space rather than truncating or abbreviating.
-  const nameLines = piece.type ? fullName.split(" ") : ["?"];
+  // ...) - wrap onto a second line at the space (or after the first character run, for
+  // Chinese where there's no space to split on) rather than truncating or abbreviating.
+  const nameLines = piece.type ? splitForDisplay(fullName) : ["?"];
 
   return (
     // data-node-id, not an onClick prop: BoardCanvas handles all clicks via a single
@@ -33,28 +35,28 @@ function PieceTokenImpl({
     <g data-node-id={piece.nodeId ?? undefined} style={{ cursor: isSelectable ? "pointer" : "default" }}>
       <title>{fullName}</title>
       <rect
-        x={cx - TOKEN / 2}
-        y={cy - TOKEN / 2}
-        width={TOKEN}
-        height={TOKEN}
+        x={cx - TOKEN_WIDTH / 2}
+        y={cy - TOKEN_HEIGHT / 2}
+        width={TOKEN_WIDTH}
+        height={TOKEN_HEIGHT}
         rx={4}
         fill={team}
         stroke={isSelected ? "var(--color-accent)" : "rgba(0,0,0,0.4)"}
         strokeWidth={isSelected ? 3 : 1}
       />
-      <g transform={`translate(${cx}, ${cy - TOKEN * 0.26})`}>
-        <PieceIcon type={piece.type} color="var(--color-text)" size={TOKEN * 0.2} />
+      <g transform={`translate(${cx}, ${cy - TOKEN_HEIGHT * 0.26})`}>
+        <PieceIcon type={piece.type} color="var(--color-text)" size={TOKEN_HEIGHT * 0.22} />
       </g>
       {nameLines.map((line, i) => (
         <text
           key={i}
           x={cx}
-          y={cy + TOKEN * 0.14 + i * TOKEN * 0.155}
+          y={cy + TOKEN_HEIGHT * 0.16 + i * TOKEN_HEIGHT * 0.26}
           textAnchor="middle"
           dominantBaseline="central"
           fontFamily="var(--font-body)"
           fontWeight={600}
-          fontSize={TOKEN * 0.135}
+          fontSize={TOKEN_HEIGHT * 0.22}
           fill="var(--color-text)"
         >
           {line}
@@ -62,6 +64,15 @@ function PieceTokenImpl({
       ))}
     </g>
   );
+}
+
+/** Wraps a piece's full title onto at most two lines - split on a space if there is one
+ * (English titles), otherwise split a longer CJK title roughly in half by character. */
+function splitForDisplay(name: string): string[] {
+  if (name.includes(" ")) return name.split(" ");
+  if (name.length <= 2) return [name];
+  const mid = Math.ceil(name.length / 2);
+  return [name.slice(0, mid), name.slice(mid)];
 }
 
 function propsAreEqual(
@@ -85,5 +96,7 @@ function propsAreEqual(
  * objects arriving from the poll-and-refetch state hook are freshly parsed JSON every time,
  * so reference equality alone would defeat memoization entirely. Every field that affects
  * rendering is listed above, and (unlike an earlier version of this component) there is no
- * callback prop left for that list to ever miss. */
+ * callback prop left for that list to ever miss. Reading the language via context (rather
+ * than a prop) still re-renders correctly on a language change - memo only bails out on
+ * props equality, not on context changes. */
 export const PieceToken = memo(PieceTokenImpl, propsAreEqual);

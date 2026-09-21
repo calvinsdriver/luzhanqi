@@ -1,7 +1,9 @@
 "use client";
 
 import { ROSTER, type PieceType } from "@/lib/rules/types";
-import { PIECE_FULL_NAMES, PieceIcon } from "@/components/board/pieceIcons";
+import { PieceIcon } from "@/components/board/pieceIcons";
+import { useLanguage } from "@/lib/client/i18n/LanguageContext";
+import type { TranslationKey } from "@/lib/client/i18n/translations";
 
 export function PieceTray({
   placedCounts,
@@ -12,6 +14,7 @@ export function PieceTray({
   selected: PieceType | null;
   onSelect: (type: PieceType | null) => void;
 }) {
+  const { t } = useLanguage();
   const types = Object.keys(ROSTER) as PieceType[];
 
   return (
@@ -34,7 +37,9 @@ export function PieceTray({
             <svg viewBox="-16 -16 32 32" className="h-6 w-6">
               <PieceIcon type={type} color={isSelected ? "var(--color-accent)" : "var(--color-text)"} size={11} />
             </svg>
-            <span className="text-center font-heading leading-tight">{PIECE_FULL_NAMES[type]}</span>
+            <span className="text-center font-heading leading-tight">
+              {t(`piece.${type}` as TranslationKey)}
+            </span>
             <span className="text-text-muted">x{remaining}</span>
           </button>
         );

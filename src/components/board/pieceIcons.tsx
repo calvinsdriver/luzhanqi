@@ -153,18 +153,3 @@ export function PieceIcon({ type, color, size }: { type: PieceType | null; color
       return <FlagGlyph size={size} color={color} />;
   }
 }
-
-export const PIECE_FULL_NAMES: Record<PieceType, string> = {
-  FIELD_MARSHAL: "Field Marshal",
-  GENERAL: "General",
-  MAJOR_GENERAL: "Major General",
-  BRIGADIER_GENERAL: "Brigadier General",
-  COLONEL: "Colonel",
-  MAJOR: "Major",
-  CAPTAIN: "Captain",
-  LIEUTENANT: "Lieutenant",
-  ENGINEER: "Engineer",
-  LANDMINE: "Landmine",
-  BOMB: "Bomb",
-  FLAG: "Flag",
-};
