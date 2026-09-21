@@ -1,4 +1,4 @@
-import type { BoardGraph, NodeId, PieceType } from "./types";
+import type { BoardGraph, BoardNode, NodeId, PieceType } from "./types";
 
 export interface OccupancyPiece {
   nodeId: NodeId | null;
@@ -33,6 +33,17 @@ function sameTeam(seatA: number, seatB: number): boolean {
   return seatA % 2 === seatB % 2;
 }
 
+/**
+ * In 2P, the thin neutral strip between the two territories is a pure transit corridor -
+ * a piece may pass through it mid-rail-move but may never end a move there, only on one
+ * side or the other. The 4P board's central hub is a much larger shared zone and stays
+ * unrestricted: any of its nodes are ordinary, stoppable squares.
+ */
+function canStopAt(board: BoardGraph, node: BoardNode): boolean {
+  if (board.mode === "2p" && node.territory === "neutral" && node.type === "neutral") return false;
+  return true;
+}
+
 function buildOccupancy(pieces: OccupancyPiece[]): Map<NodeId, OccupancyPiece> {
   const map = new Map<NodeId, OccupancyPiece>();
   for (const p of pieces) {
@@ -53,6 +64,7 @@ function roadDestinations(
   for (const neighbor of neighbors) {
     const node = board.nodes[neighbor];
     if (!node || node.type === "mountain") continue;
+    if (!canStopAt(board, node)) continue; // road moves are a single step, i.e. always a stop
     const occupant = occupancy.get(neighbor);
     if (occupant) {
       if (sameTeam(occupant.seatIndex, moverSeat)) continue; // can't land on your own or an ally's piece
@@ -80,12 +92,14 @@ function straightRailWalk(
     if (!node || node.type === "mountain") break;
     const occupant = occupancy.get(nodeId);
     if (occupant) {
-      if (!sameTeam(occupant.seatIndex, moverSeat) && node.type !== "camp") {
+      if (!sameTeam(occupant.seatIndex, moverSeat) && node.type !== "camp" && canStopAt(board, node)) {
         destinations.push(nodeId);
       }
       break; // blocked either way - by own piece, an unattackable camp, or a captured enemy square
     }
-    destinations.push(nodeId);
+    // A non-stoppable node (2P's neutral strip) is still a valid pass-through waypoint -
+    // it just never gets offered as a destination itself, so the walk keeps going past it.
+    if (canStopAt(board, node)) destinations.push(nodeId);
   }
   return destinations;
 }
@@ -132,13 +146,13 @@ function engineerRailDestinations(
       if (!node || node.type === "mountain") continue;
       const occupant = occupancy.get(neighbor);
       if (occupant) {
-        if (!sameTeam(occupant.seatIndex, moverSeat) && node.type !== "camp") {
+        if (!sameTeam(occupant.seatIndex, moverSeat) && node.type !== "camp" && canStopAt(board, node)) {
           destinations.add(neighbor);
         }
         continue; // blocked - don't expand past this node
       }
-      destinations.add(neighbor);
-      queue.push(neighbor);
+      if (canStopAt(board, node)) destinations.add(neighbor);
+      queue.push(neighbor); // always keep exploring past an empty node, even a non-stoppable one
     }
   }
   return [...destinations];

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { BOARD_2P } from "../board2p";
+import { BOARD_4P } from "../board4p";
 import { legalMoves, type OccupancyPiece } from "../movement";
 
 function piece(nodeId: string, seatIndex: number): OccupancyPiece {
@@ -84,6 +85,37 @@ describe("legalMoves - rail movement", () => {
     expect(destinations).toContain("P0-0-0");
     expect(destinations).toContain("P0-0-1"); // turned the corner onto the front-row rail
     expect(destinations).toContain("P0-0-4");
+  });
+});
+
+describe("legalMoves - 2P neutral strip is pass-through only", () => {
+  it("cannot road-step onto the neutral strip from the front row", () => {
+    const pieces: OccupancyPiece[] = [piece("P0-0-0", 0)];
+    const destinations = legalMoves(BOARD_2P, pieces, "P0-0-0", "CAPTAIN", 0);
+    expect(destinations).not.toContain("N-0");
+  });
+
+  it("cannot rail-stop on the neutral strip, but can pass through it onto the opponent's side", () => {
+    const pieces: OccupancyPiece[] = [piece("P0-3-0", 0)];
+    const destinations = legalMoves(BOARD_2P, pieces, "P0-3-0", "CAPTAIN", 0);
+    expect(destinations).not.toContain("N-0"); // can't stop mid-crossing
+    expect(destinations).toContain("P1-0-0"); // but crossing all the way to the other side is fine
+    expect(destinations).toContain("P1-2-0"); // and continuing further into it, same as any other rail move
+  });
+
+  it("an Engineer also cannot stop on the neutral strip while turning corners", () => {
+    const pieces: OccupancyPiece[] = [piece("P0-3-0", 0)];
+    const destinations = legalMoves(BOARD_2P, pieces, "P0-3-0", "ENGINEER", 0);
+    expect(destinations).not.toContain("N-0");
+    expect(destinations).toContain("P1-0-0");
+  });
+});
+
+describe("legalMoves - 4P hub is not restricted", () => {
+  it("allows stopping on a central hub node", () => {
+    const pieces: OccupancyPiece[] = [piece("P0-3-0", 0)];
+    const destinations = legalMoves(BOARD_4P, pieces, "P0-3-0", "CAPTAIN", 0);
+    expect(destinations).toContain("H-0-0"); // the hub corner this territory's rail feeds into
   });
 });
 
