@@ -145,11 +145,10 @@ export default function GamePage({ params }: PageProps<"/g/[gameKey]">) {
     <div className="flex h-dvh flex-col overflow-hidden px-4 py-3">
       <GameHeader gameKey={gameKey} subtitleKey={state.status === "finished" ? "header.gameOver" : "header.battle"} />
 
-      {state.status === "finished" && (
-        <div className="mx-auto mb-3 w-full max-w-3xl flex-shrink-0">
-          <GameOverBanner state={state} />
-        </div>
-      )}
+      <div className="mx-auto mb-3 w-full max-w-3xl flex-shrink-0 space-y-3">
+        {state.status === "finished" && <GameOverBanner state={state} />}
+        <SacrificedBanner state={state} seatIndex={seatIndex} />
+      </div>
 
       <div className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col gap-4 lg:flex-row">
         <div className="flex min-h-0 min-w-0 flex-1 items-center justify-center rounded-lg border border-border bg-surface p-3">
@@ -170,7 +169,6 @@ export default function GamePage({ params }: PageProps<"/g/[gameKey]">) {
               {moveError}
             </p>
           )}
-          <SacrificedBanner state={state} seatIndex={seatIndex} />
         </div>
       </div>
     </div>

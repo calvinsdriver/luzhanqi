@@ -6,6 +6,7 @@ import { PieceIcon } from "./pieceIcons";
 import { TOKEN_HEIGHT, TOKEN_WIDTH } from "./boardLayout";
 import { useLanguage } from "@/lib/client/i18n/LanguageContext";
 import type { TranslationKey } from "@/lib/client/i18n/translations";
+import { PIECE_ABBREVIATIONS } from "@/lib/rules/pieceRanks";
 
 function PieceTokenImpl({
   piece,
@@ -20,13 +21,13 @@ function PieceTokenImpl({
   isSelected: boolean;
   isSelectable: boolean;
 }) {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const team = piece.seatIndex % 2 === 0 ? "var(--color-team-a)" : "var(--color-team-b)";
   const fullName = piece.type ? t(`piece.${piece.type}` as TranslationKey) : t("piece.unknown");
-  // Full titles never fit on one line at board scale ("Brigadier General", "Field Marshal",
-  // ...) - wrap onto a second line at the space (or after the first character run, for
-  // Chinese where there's no space to split on) rather than truncating or abbreviating.
-  const nameLines = piece.type ? splitForDisplay(fullName) : ["?"];
+  // The full title is always available on hover via <title> below; what's actually drawn
+  // on the token itself is the short English abbreviation ("FM", "GEN", ...) in English,
+  // or the (already two-character) full name in Chinese, which needs no abbreviating.
+  const displayText = piece.type ? (lang === "en" ? PIECE_ABBREVIATIONS[piece.type] : fullName) : "?";
 
   return (
     // data-node-id, not an onClick prop: BoardCanvas handles all clicks via a single
@@ -44,35 +45,23 @@ function PieceTokenImpl({
         stroke={isSelected ? "var(--color-accent)" : "rgba(0,0,0,0.4)"}
         strokeWidth={isSelected ? 3 : 1}
       />
-      <g transform={`translate(${cx}, ${cy - TOKEN_HEIGHT * 0.26})`}>
-        <PieceIcon type={piece.type} color="var(--color-text)" size={TOKEN_HEIGHT * 0.22} />
+      <g transform={`translate(${cx}, ${cy - TOKEN_HEIGHT * 0.2})`}>
+        <PieceIcon type={piece.type} color="var(--color-text)" size={TOKEN_HEIGHT * 0.26} />
       </g>
-      {nameLines.map((line, i) => (
-        <text
-          key={i}
-          x={cx}
-          y={cy + TOKEN_HEIGHT * 0.16 + i * TOKEN_HEIGHT * 0.26}
-          textAnchor="middle"
-          dominantBaseline="central"
-          fontFamily="var(--font-body)"
-          fontWeight={600}
-          fontSize={TOKEN_HEIGHT * 0.22}
-          fill="var(--color-text)"
-        >
-          {line}
-        </text>
-      ))}
+      <text
+        x={cx}
+        y={cy + TOKEN_HEIGHT * 0.26}
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontFamily="var(--font-body)"
+        fontWeight={600}
+        fontSize={TOKEN_HEIGHT * 0.24}
+        fill="var(--color-text)"
+      >
+        {displayText}
+      </text>
     </g>
   );
-}
-
-/** Wraps a piece's full title onto at most two lines - split on a space if there is one
- * (English titles), otherwise split a longer CJK title roughly in half by character. */
-function splitForDisplay(name: string): string[] {
-  if (name.includes(" ")) return name.split(" ");
-  if (name.length <= 2) return [name];
-  const mid = Math.ceil(name.length / 2);
-  return [name.slice(0, mid), name.slice(mid)];
 }
 
 function propsAreEqual(
