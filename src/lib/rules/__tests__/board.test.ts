@@ -62,20 +62,4 @@ describe("BOARD_4P", () => {
       expect(connectorCount).toBe(3);
     }
   });
-
-  it("the hub's center connects diagonally to all 4 corners, like a camp", () => {
-    for (const corner of ["H-0-0", "H-0-2", "H-2-0", "H-2-2"]) {
-      expect(BOARD_4P.roadEdges["H-1-1"]).toContain(corner);
-      expect(BOARD_4P.roadEdges[corner]).toContain("H-1-1");
-    }
-  });
-
-  it("has rail lines running straight through the hub's center in both directions and both diagonals", () => {
-    const throughCenterLines = BOARD_4P.railLines.filter((line) => line.includes("H-1-1"));
-    // middle row, middle column, and both corner-to-corner diagonals
-    expect(throughCenterLines.length).toBe(4);
-    for (const line of throughCenterLines) {
-      expect(line[Math.floor(line.length / 2)]).toBe("H-1-1"); // center sits mid-line, not at an end
-    }
-  });
 });

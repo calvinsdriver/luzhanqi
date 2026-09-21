@@ -52,15 +52,6 @@ ring. A piece arriving at a hub corner via its home territory's rail can only co
 straight past that corner if it's an Engineer turning onto the ring; everyone else's rail
 move simply ends there (or short of it, if blocked).
 
-Corrected against a real 4-player board photo: the hub's center also connects diagonally
-to its 4 corners (`H-1-1` to `H-0-0`/`H-0-2`/`H-2-0`/`H-2-2`) - the same camp-style X-pattern
-used everywhere else on the board - and carries 4 rail lines through the center rather than
-none: the middle row (west mid-edge <-> east mid-edge), the middle column (north <-> south),
-and both corner-to-corner diagonals. This lets a piece cross the entire hub in one rail
-move between opposite territories, mirroring how the 2P board's outer rails run the full
-board length through its neutral strip - the earlier version only had the perimeter ring,
-with nothing connecting straight through the middle.
-
 ## Known simplification / follow-up
 
 Render coordinates (`x`, `y` on each `BoardNode`) are cosmetic placeholders chosen to keep

@@ -72,23 +72,11 @@ function buildBoard4P(): BoardGraph {
       if (r + 1 < 3) addRoadEdge(roadEdges, id, hubId(r + 1, c));
     }
   }
-  // The hub's center connects diagonally to its 4 corners - the same "camp" X-pattern
-  // used elsewhere on the board (see gridBuilder.ts) - matching the real board's central
-  // crossing lines rather than a plain unconnected grid.
-  for (const corner of [hubId(0, 0), hubId(0, 2), hubId(2, 0), hubId(2, 2)]) {
-    addRoadEdge(roadEdges, hubId(1, 1), corner);
-  }
   railLines.push(
     [hubId(0, 0), hubId(0, 1), hubId(0, 2)], // top edge ring
     [hubId(0, 2), hubId(1, 2), hubId(2, 2)], // right edge ring
     [hubId(2, 2), hubId(2, 1), hubId(2, 0)], // bottom edge ring
     [hubId(2, 0), hubId(1, 0), hubId(0, 0)], // left edge ring
-    // Straight through the center, connecting opposite territories directly (mirroring
-    // the 2P board's outer rails running the full board length through its neutral strip).
-    [hubId(1, 0), hubId(1, 1), hubId(1, 2)], // west <-> east, through the middle row
-    [hubId(0, 1), hubId(1, 1), hubId(2, 1)], // north <-> south, through the middle column
-    [hubId(0, 0), hubId(1, 1), hubId(2, 2)], // diagonal corner-to-corner
-    [hubId(0, 2), hubId(1, 1), hubId(2, 0)], // diagonal corner-to-corner
   );
 
   for (const orient of orientations) {
